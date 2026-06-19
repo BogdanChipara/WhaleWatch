@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://whalewatch-production-9e12.up.railway.app/$1"
+    }
+  ]
+}
