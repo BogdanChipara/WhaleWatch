@@ -132,16 +132,20 @@ function measureResponseBytes(response) {
 function apiFetch(input, init = {}) {
   const { trackTransfer = true, ...fetchInit } = init
   const headers = new Headers(init.headers ?? {})
-  let resolvedInput = input
-  if (typeof input === 'string' && input.startsWith('/api/')) {
-    const isLocalhost =
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  const isApiPath = typeof input === 'string' && input.startsWith('/api/')
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
-    resolvedInput = isLocalhost
-      ? input
-      : `${PROD_API_BASE_URL}${input.replace(/^\/api/, '')}`
-  }
+  const requestCandidates = (() => {
+    if (!isApiPath) return [input]
+    if (isLocalhost) return [input]
+
+    const direct = `${PROD_API_BASE_URL}${input.replace(/^\/api/, '')}`
+    // Try both routes so production still works if either direct CORS/network
+    // or Vercel rewrite configuration is temporarily failing.
+    return [direct, input]
+  })()
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     const isNgrokHost =
@@ -153,13 +157,33 @@ function apiFetch(input, init = {}) {
       headers.set('ngrok-skip-browser-warning', 'true')
     }
   }
-  return fetch(resolvedInput, { ...fetchInit, headers }).then((response) => {
+  const fetchWithTracking = (target) => fetch(target, { ...fetchInit, headers }).then((response) => {
     if (trackTransfer && activeTransferTracker) {
       const bytes = measureResponseBytes(response)
       activeTransferTracker(bytes)
     }
     return response
   })
+
+  const tryRequest = async () => {
+    let lastResponse = null
+    let lastError = null
+
+    for (const candidate of requestCandidates) {
+      try {
+        const response = await fetchWithTracking(candidate)
+        if (response.ok) return response
+        lastResponse = response
+      } catch (error) {
+        lastError = error
+      }
+    }
+
+    if (lastResponse) return lastResponse
+    throw lastError ?? new Error('Request failed')
+  }
+
+  return tryRequest()
 }
 
 function formatTransferredData(bytes) {
