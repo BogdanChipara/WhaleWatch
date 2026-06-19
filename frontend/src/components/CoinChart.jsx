@@ -683,7 +683,12 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
   }, [candles, ema50, ema200, reloadToken, gcCrossedAt, pinMarkerAt])
 
   const options = useMemo(
-    () => ({
+    () => {
+      const candleSeries = chartData?.datasets?.[0]?.data ?? []
+      const xMin = candleSeries.length ? candleSeries[0].x : undefined
+      const xMax = candleSeries.length ? candleSeries[candleSeries.length - 1].x : undefined
+
+      return ({
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
@@ -722,6 +727,8 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
           bounds: 'data',
           offset: false,
           grace: 0,
+          min: xMin,
+          max: xMax,
           grid: { color: '#1a1a35' },
           ticks: {
             color: '#9094b0',
@@ -740,8 +747,9 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
           border: { color: '#2a2a50' },
         },
       },
-    }),
-    [],
+    })
+    },
+    [chartData],
   )
 
   const changeColor = hoverInfo
