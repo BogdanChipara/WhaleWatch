@@ -6,6 +6,8 @@ import {
   TimeScale,
   Tooltip,
   Legend,
+  LineController,
+  ScatterController,
   LineElement,
   PointElement,
 } from 'chart.js'
@@ -24,6 +26,8 @@ ChartJS.register(
   TimeScale,
   Tooltip,
   Legend,
+  LineController,
+  ScatterController,
   LineElement,
   PointElement,
   CandlestickController,
