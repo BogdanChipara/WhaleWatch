@@ -719,6 +719,9 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
       scales: {
         x: {
           type: 'linear',
+          bounds: 'data',
+          offset: false,
+          grace: 0,
           grid: { color: '#1a1a35' },
           ticks: {
             color: '#9094b0',
