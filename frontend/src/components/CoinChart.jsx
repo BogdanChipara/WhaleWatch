@@ -714,13 +714,17 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
       },
       scales: {
         x: {
-          type: 'time',
+          type: 'linear',
           grid: { color: '#1a1a35' },
-          ticks: { color: '#9094b0' },
-          border: { color: '#2a2a50' },
-          time: {
-            tooltipFormat: 'dd MMM yyyy HH:mm',
+          ticks: {
+            color: '#9094b0',
+            callback: (value) => {
+              const ts = Number(value)
+              if (!Number.isFinite(ts)) return ''
+              return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
+            },
           },
+          border: { color: '#2a2a50' },
         },
         y: {
           position: 'right',
