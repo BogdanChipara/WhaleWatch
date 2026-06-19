@@ -748,7 +748,7 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
         onMouseLeave={handleMouseLeave}
         onContextMenu={handleContextMenu}
       >
-        <Chart ref={chartRef} type="candlestick" data={chartData} options={options} plugins={[fillBetweenEMAsPlugin]} />
+        <Chart ref={chartRef} type="candlestick" data={chartData} options={options} />
         {selectionRect && (
           <div
             style={{
