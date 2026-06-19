@@ -685,8 +685,26 @@ export function CoinChart({ candles, ema50, ema200, reloadToken, onSelection, co
   const options = useMemo(
     () => {
       const candleSeries = chartData?.datasets?.[0]?.data ?? []
-      const xMin = candleSeries.length ? candleSeries[0].x : undefined
-      const xMax = candleSeries.length ? candleSeries[candleSeries.length - 1].x : undefined
+      const firstX = candleSeries.length ? Number(candleSeries[0].x) : undefined
+      const lastX = candleSeries.length ? Number(candleSeries[candleSeries.length - 1].x) : undefined
+      const xSteps = []
+      for (let i = 1; i < candleSeries.length; i += 1) {
+        const step = Number(candleSeries[i].x) - Number(candleSeries[i - 1].x)
+        if (Number.isFinite(step) && step > 0) xSteps.push(step)
+      }
+      const minStep = xSteps.length ? Math.min(...xSteps) : 0
+      const edgeTrim = minStep > 0 ? minStep * 0.5 : 0
+      let xMin = firstX
+      let xMax = lastX
+
+      if (Number.isFinite(firstX) && Number.isFinite(lastX) && edgeTrim > 0) {
+        const trimmedMin = firstX + edgeTrim
+        const trimmedMax = lastX - edgeTrim
+        if (trimmedMin < trimmedMax) {
+          xMin = trimmedMin
+          xMax = trimmedMax
+        }
+      }
 
       return ({
       responsive: true,
