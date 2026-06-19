@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Component, useEffect, useMemo, useRef, useState } from 'react'
 import { CoinChart } from './components/CoinChart.jsx'
 import whaleLogo from './assets/WhaleWatch_Logo.svg'
 
@@ -391,6 +391,33 @@ function LazyChartMount({ children, fallback }) {
       {isVisible ? children : fallback}
     </div>
   )
+}
+
+class ChartErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error) {
+    console.error('[CHART] Render crash:', error)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="chart-overlay">
+          <p className="error-message">Chart failed to render.</p>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
 }
 
 export default function App() {
@@ -1129,23 +1156,25 @@ export default function App() {
             <div className="chart-overlay"><p className="error-message">Error: {hasError}</p></div>
           ) : coinData?.candles ? (
             <LazyChartMount fallback={<div className="chart-overlay"><p className="status-message">Chart will render when visible...</p></div>}>
-              <CoinChart
-                candles={coinData.candles}
-                ema50={coinData.ema50}
-                ema200={coinData.ema200}
-                reloadToken={`${coin}|${displayRange}|${coinData.rangePolicy?.resolution}`}
-                coinSymbol={coin}
-                timeframe={displayRange}
-                candleLabel={candleLabel}
-                averageMove={atrSummary?.averageMove ?? null}
-                gcProbability={gcProbability}
-                gcDebug={gcDebug}
-                gcCrossedAt={crossMarkerTime}
-                pinMarkerAt={pinMarkerTime}
-                hasCrossed={hasCrossed}
-                crossedMovePct={intervalMoveInfo?.pct ?? null}
-                crossedMoveText={intervalMoveInfo?.text ?? null}
-              />
+              <ChartErrorBoundary>
+                <CoinChart
+                  candles={coinData.candles}
+                  ema50={coinData.ema50}
+                  ema200={coinData.ema200}
+                  reloadToken={`${coin}|${displayRange}|${coinData.rangePolicy?.resolution}`}
+                  coinSymbol={coin}
+                  timeframe={displayRange}
+                  candleLabel={candleLabel}
+                  averageMove={atrSummary?.averageMove ?? null}
+                  gcProbability={gcProbability}
+                  gcDebug={gcDebug}
+                  gcCrossedAt={crossMarkerTime}
+                  pinMarkerAt={pinMarkerTime}
+                  hasCrossed={hasCrossed}
+                  crossedMovePct={intervalMoveInfo?.pct ?? null}
+                  crossedMoveText={intervalMoveInfo?.text ?? null}
+                />
+              </ChartErrorBoundary>
             </LazyChartMount>
           ) : isLoading ? (
             <div className="chart-overlay"><p className="status-message">Loading {coin} {range}...</p></div>
@@ -1233,23 +1262,25 @@ export default function App() {
             <div className="chart-overlay"><p className="error-message">Error: {hasError}</p></div>
           ) : coinData?.candles ? (
             <LazyChartMount fallback={<div className="chart-overlay"><p className="status-message">Chart will render when visible...</p></div>}>
-              <CoinChart
-                candles={coinData.candles}
-                ema50={coinData.ema50}
-                ema200={coinData.ema200}
-                reloadToken={`${coin}|${selectedRange}|${coinData.rangePolicy?.resolution}`}
-                coinSymbol={coin}
-                timeframe={selectedRange}
-                candleLabel={candleLabel}
-                averageMove={atrSummary?.averageMove ?? null}
-                gcProbability={gcProbability}
-                gcDebug={gcDebug}
-                gcCrossedAt={null}
-                hasCrossed={false}
-                crossedMovePct={intervalMoveInfo?.pct ?? null}
-                crossedMoveText={intervalMoveInfo?.text ?? null}
-                pinMarkerAt={pinMarkerTime}
-              />
+              <ChartErrorBoundary>
+                <CoinChart
+                  candles={coinData.candles}
+                  ema50={coinData.ema50}
+                  ema200={coinData.ema200}
+                  reloadToken={`${coin}|${selectedRange}|${coinData.rangePolicy?.resolution}`}
+                  coinSymbol={coin}
+                  timeframe={selectedRange}
+                  candleLabel={candleLabel}
+                  averageMove={atrSummary?.averageMove ?? null}
+                  gcProbability={gcProbability}
+                  gcDebug={gcDebug}
+                  gcCrossedAt={null}
+                  hasCrossed={false}
+                  crossedMovePct={intervalMoveInfo?.pct ?? null}
+                  crossedMoveText={intervalMoveInfo?.text ?? null}
+                  pinMarkerAt={pinMarkerTime}
+                />
+              </ChartErrorBoundary>
             </LazyChartMount>
           ) : isLoading ? (
             <div className="chart-overlay"><p className="status-message">Loading {coin} {selectedRange}...</p></div>
