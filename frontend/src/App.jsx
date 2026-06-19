@@ -11,6 +11,7 @@ const DEFAULT_COIN_CROSS_KEEP_DAYS = 2
 const INTERVAL_CACHE_DB_NAME = 'gc_probability_cache'
 const INTERVAL_CACHE_STORE_NAME = 'interval_cache'
 const INTERVAL_CACHE_DB_VERSION = 1
+const PROD_API_BASE_URL = 'https://whalewatch-production-9e12.up.railway.app'
 
 const RANGE_TO_DAYS = {
   '1D': 1,
@@ -131,6 +132,16 @@ function measureResponseBytes(response) {
 function apiFetch(input, init = {}) {
   const { trackTransfer = true, ...fetchInit } = init
   const headers = new Headers(init.headers ?? {})
+  let resolvedInput = input
+  if (typeof input === 'string' && input.startsWith('/api/')) {
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+    resolvedInput = isLocalhost
+      ? input
+      : `${PROD_API_BASE_URL}${input.replace(/^\/api/, '')}`
+  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     const isNgrokHost =
@@ -142,7 +153,7 @@ function apiFetch(input, init = {}) {
       headers.set('ngrok-skip-browser-warning', 'true')
     }
   }
-  return fetch(input, { ...fetchInit, headers }).then((response) => {
+  return fetch(resolvedInput, { ...fetchInit, headers }).then((response) => {
     if (trackTransfer && activeTransferTracker) {
       const bytes = measureResponseBytes(response)
       activeTransferTracker(bytes)
